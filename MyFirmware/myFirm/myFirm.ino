@@ -12,7 +12,7 @@ const int pinQ2 = 5;
 const int pinLed = 9;
 const float analogTomV = 3300.0/1024.0; // Reference of 3.3V divided by 10 bit read (2^10)
 
-const String firmVersion = "0.1";   //Firmware version
+const String firmVersion = "1.0";   //Firmware version
 const int baudRate = 9600;          //Serial baud rate
 const char separator = ' ';         //Command separator
 const char endOfCmd = '\n';         //Command terminator
@@ -21,6 +21,7 @@ const int n = 10;                   //Samples for tempeterature reading
 //global variables
 char bufferIn[64];
 float value = 0.0;                  //Value read from serial
+int iWrite = 0;                     //Value to update
 String cmd;                         //Command from serial
 
 void setup() {
@@ -30,14 +31,6 @@ void setup() {
   while(!Serial)  {;}
   analogWrite(pinQ1, 0);
   analogWrite(pinQ2, 0);
-}
-
-void checkValue(){
-  if(value >= 100.0)
-    value = 100.0;
-
-  else if(value <= 0.0)
-    value = 0.0;
 }
 
 void loop() {
@@ -81,17 +74,27 @@ void loop() {
     Serial.println(temp / float(n));
   }
   else if ((cmd == "V") or (cmd == "VER")) {
-    Serial.println("TCLab Firmware Version " + firmVersion);
+    Serial.println("My Firmware Version " + firmVersion);
   }
-  else if (cmd == "Q1") {
+  else if((cmd == "Q1") || (cmd == "Q2") || (cmd == "LED")){
     checkValue();
-    analogWrite(pinQ1, value);
+    int writePin = (cmd == "Q1") ? pinQ1 : (cmd == "Q2") ? pinQ2 : pinLed;
+    
+    analogWrite(writePin, iWrite);
     Serial.println(value);
   }
-  else if (cmd == "Q2") {
-    checkValue();
-    analogWrite(pinQ1, value);
-    Serial.println(value);
+}
+
+void checkValue(){
+  //Value between 100 and 0
+  value = max(0, min(100, value));
+
+  if(cmd == "Q1" || cmd == "Q2"){
+    iWrite = int(value*2.0);
+    iWrite = min(iWrite, 255);
   }
-  
+  else if(cmd == "LED"){
+    iWrite = int(value*0.5);
+    iWrite = min(iWrite, 50);
+  }
 }
