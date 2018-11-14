@@ -16,7 +16,6 @@ def save_txt(t,u1,u2,y1,y2,sp1,sp2):
     np.savetxt('data.txt',data,delimiter=',',header=top,comments='')
 
 def model_balance(x,t,Q):
-    T0      = 273.15 + 23   #Kelvin
     Tinf    = 273.15 + 23   #Kelvin
     alpha   = 0.01
     cp      = 500           #Heat capacity (J/Kg*K)

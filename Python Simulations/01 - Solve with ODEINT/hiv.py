@@ -44,7 +44,7 @@ plt.legend()
 plt.show()
 
 #Multiple values of k5
-N = 50
+N = 30
 k5 = np.linspace(1,N,N)
 
 H = np.zeros(N)
@@ -59,17 +59,20 @@ for i in range(0,len(k5)):
 
 plt.subplot(3,1,1)
 plt.semilogy(k5,H,'r-', linewidth=2)
+plt.grid()
 plt.xlabel('k5')
 plt.ylabel('Final Value')
 plt.title('Healthy Cells')
 
 plt.subplot(3,1,2)
+plt.grid()
 plt.semilogy(k5,I,'b-', linewidth=2)
 plt.xlabel('k5')
 plt.ylabel('Final Value')
 plt.title('Infected Cells')
 
 plt.subplot(3,1,3)
+plt.grid()
 plt.semilogy(k5,V,'g-', linewidth=2)
 plt.xlabel('k5')
 plt.ylabel('Final Value')

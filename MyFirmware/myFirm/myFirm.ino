@@ -53,29 +53,15 @@ void loop() {
   memset(bufferIn, 0, sizeof(bufferIn));
 
   //Commands
-  if(cmd == "T1"){
-    float mV = 0;
-    float temp = 0;
-
-    for(int i = 0; i < n; i++){
-      mV = (float) analogRead(pinT1)*analogTomV;
-      temp = temp + (mV-500.0)/10.0; //mV to degrees Celsius
-    }
-    Serial.println(temp / float(n));
-  }
-  else if(cmd == "T2"){
-    float mV = 0;
-    float temp = 0;
-
-    for(int i = 0; i < n; i++){
-      mV = (float) analogRead(pinT2)*analogTomV;
-      temp = temp + (mV-500.0)/10.0; //mV to degrees Celsius
-    }
-    Serial.println(temp / float(n));
-  }
-  else if ((cmd == "V") or (cmd == "VER")) {
+  if(cmd == "T1" || cmd == "T2")
+    Serial.println(getTemp(cmd));
+    
+  else if(cmd == "T")
+    Serial.println((getTemp("T1") + getTemp("T2"))/2);
+    
+  else if ((cmd == "V") or (cmd == "VER"))
     Serial.println("My Firmware Version " + firmVersion);
-  }
+    
   else if((cmd == "Q1") || (cmd == "Q2") || (cmd == "LED")){
     checkValue();
     int writePin = (cmd == "Q1") ? pinQ1 : (cmd == "Q2") ? pinQ2 : pinLed;
@@ -83,6 +69,24 @@ void loop() {
     analogWrite(writePin, iWrite);
     Serial.println(value);
   }
+}
+
+float getTemp(String cmd)
+{
+  float mV = 0;
+  float temp = 0;
+  int pin;
+
+  if(cmd == "T1")
+    pin = pinT1;
+  else
+    pin = pinT2;
+
+  for(int i = 0; i < n; i++){
+    mV = (float) analogRead(pin)*analogTomV;
+    temp = temp + (mV-500.0)/10.0; //mV to degrees Celsius
+  }
+    return temp/float(n);
 }
 
 void checkValue(){
