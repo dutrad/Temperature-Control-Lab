@@ -1,8 +1,11 @@
 /*
  * FirmWare for Control Lab
   May 2018
+  Oct 2019
   Vinicius Dutra Dias
 */
+
+#include <EEPROM.h>
 
 //constants
 const int pinT1 = 0;
@@ -11,26 +14,33 @@ const int pinQ1 = 3;
 const int pinQ2 = 5;
 const int pinLed = 9;
 const float analogTomV = 3300.0/1024.0; // Reference of 3.3V divided by 10 bit read (2^10)
+const int memQ1 = 0;
+const int memQ2 = sizeof(int);
 
-const String firmVersion = "1.0";   //Firmware version
+const String firmVersion = "1.1";   //Firmware version
 const int baudRate = 9600;          //Serial baud rate
 const char separator = ' ';         //Command separator
 const char endOfCmd = '\n';         //Command terminator
 const int n = 10;                   //Samples for tempeterature reading
 
 //global variables
-char bufferIn[64];
+char bufferIn[6];
 float value = 0.0;                  //Value read from serial
 int iWrite = 0;                     //Value to update
 String cmd;                         //Command from serial
+String data;
 
 void setup() {
   analogReference(EXTERNAL);
   
   Serial.begin(baudRate);
   while(!Serial)  {;}
-  analogWrite(pinQ1, 0);
-  analogWrite(pinQ2, 0);
+
+  EEPROM.get(memQ1, iWrite);
+  analogWrite(pinQ1, iWrite);
+
+  EEPROM.get(memQ2, iWrite);
+  analogWrite(pinQ2, iWrite);
 }
 
 void loop() {
@@ -38,7 +48,7 @@ void loop() {
   Serial.readBytesUntil(endOfCmd, bufferIn, sizeof(bufferIn));
 
   //Get command
-  String data = String(bufferIn);
+  data = String(bufferIn);
   int pos = data.indexOf(separator); 
   cmd  = data.substring(0, pos);
   cmd.trim();
@@ -53,34 +63,55 @@ void loop() {
   memset(bufferIn, 0, sizeof(bufferIn));
 
   //Commands
-  if(cmd == "T1" || cmd == "T2")
-    Serial.println(getTemp(cmd));
+  if(cmd == "T1")
+    Serial.println(getTemp(pinT1));
+
+  else if(cmd == "T2")
+    Serial.println(getTemp(pinT2));
     
   else if(cmd == "T")
-    Serial.println((getTemp("T1") + getTemp("T2"))/2);
+    Serial.println((getTemp(pinT1) + getTemp(pinT2))/2);
     
-  else if ((cmd == "V") or (cmd == "VER"))
+  else if (cmd == "V")
     Serial.println("My Firmware Version " + firmVersion);
     
-  else if((cmd == "Q1") || (cmd == "Q2") || (cmd == "LED")){
-    checkValue();
-    int writePin = (cmd == "Q1") ? pinQ1 : (cmd == "Q2") ? pinQ2 : pinLed;
+  else if(cmd == "Q1"){
+    checkValue(); 
     
-    analogWrite(writePin, iWrite);
+    analogWrite(pinQ1, iWrite);
+    Serial.println(value);
+
+    EEPROM.update(memQ1, iWrite);
+  }
+
+  else if(cmd == "Q1"){
+    checkValue(); 
+    
+    analogWrite(pinQ2, iWrite);
+    Serial.println(value);
+
+    EEPROM.update(memQ2, iWrite);
+  }
+  
+  else if(cmd == "Q"){
+    EEPROM.get(memQ1, iWrite);
+    Serial.println(iWrite);
+    EEPROM.get(memQ2, iWrite);
+    Serial.println(iWrite);
+
+  }
+  else if(cmd == "L"){
+    checkValue();
+
+    analogWrite(pinLed, iWrite);
     Serial.println(value);
   }
 }
 
-float getTemp(String cmd)
+float getTemp(int pin)
 {
   float mV = 0;
   float temp = 0;
-  int pin;
-
-  if(cmd == "T1")
-    pin = pinT1;
-  else
-    pin = pinT2;
 
   for(int i = 0; i < n; i++){
     mV = (float) analogRead(pin)*analogTomV;
@@ -93,12 +124,7 @@ void checkValue(){
   //Value between 100 and 0
   value = max(0, min(100, value));
 
-  if(cmd == "Q1" || cmd == "Q2"){
-    iWrite = int(value*2.0);
-    iWrite = min(iWrite, 255);
-  }
-  else if(cmd == "LED"){
-    iWrite = int(value*0.5);
-    iWrite = min(iWrite, 50);
-  }
+  iWrite = int(value*2.55);
+  iWrite = min(iWrite, 255);
+
 }
