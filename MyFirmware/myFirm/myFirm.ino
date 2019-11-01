@@ -84,7 +84,7 @@ void loop() {
     EEPROM.update(memQ1, iWrite);
   }
 
-  else if(cmd == "Q1"){
+  else if(cmd == "Q2"){
     checkValue(); 
     
     analogWrite(pinQ2, iWrite);
