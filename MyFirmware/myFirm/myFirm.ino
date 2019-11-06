@@ -5,8 +5,6 @@
   Vinicius Dutra Dias
 */
 
-#include <EEPROM.h>
-
 //constants
 const int pinT1 = 0;
 const int pinT2 = 2;
@@ -14,10 +12,8 @@ const int pinQ1 = 3;
 const int pinQ2 = 5;
 const int pinLed = 9;
 const float analogTomV = 3300.0/1024.0; // Reference of 3.3V divided by 10 bit read (2^10)
-const int memQ1 = 0;
-const int memQ2 = sizeof(int);
 
-const String firmVersion = "1.1";   //Firmware version
+const String firmVersion = "1.2";   //Firmware version
 const int baudRate = 9600;          //Serial baud rate
 const char separator = ' ';         //Command separator
 const char endOfCmd = '\n';         //Command terminator
@@ -35,18 +31,14 @@ void setup() {
   
   Serial.begin(baudRate);
   while(!Serial)  {;}
-
-  EEPROM.get(memQ1, iWrite);
-  analogWrite(pinQ1, iWrite);
-
-  EEPROM.get(memQ2, iWrite);
-  analogWrite(pinQ2, iWrite);
 }
 
-void loop() {
+void readCmd(){
   //Parse command from serial input
   Serial.readBytesUntil(endOfCmd, bufferIn, sizeof(bufferIn));
+}
 
+void parseCmd(){
   //Get command
   data = String(bufferIn);
   int pos = data.indexOf(separator); 
@@ -61,7 +53,9 @@ void loop() {
 
   //Clear buffer
   memset(bufferIn, 0, sizeof(bufferIn));
+}
 
+void execCmd(){
   //Commands
   if(cmd == "T1")
     Serial.println(getTemp(pinT1));
@@ -80,8 +74,6 @@ void loop() {
     
     analogWrite(pinQ1, iWrite);
     Serial.println(value);
-
-    EEPROM.update(memQ1, iWrite);
   }
 
   else if(cmd == "Q2"){
@@ -89,16 +81,6 @@ void loop() {
     
     analogWrite(pinQ2, iWrite);
     Serial.println(value);
-
-    EEPROM.update(memQ2, iWrite);
-  }
-  
-  else if(cmd == "Q"){
-    EEPROM.get(memQ1, iWrite);
-    Serial.println(iWrite);
-    EEPROM.get(memQ2, iWrite);
-    Serial.println(iWrite);
-
   }
   else if(cmd == "L"){
     checkValue();
@@ -126,5 +108,11 @@ void checkValue(){
 
   iWrite = int(value*2.55);
   iWrite = min(iWrite, 255);
+}
 
+void loop() {
+  readCmd();
+  parseCmd();
+  execCmd();
+  Serial.flush();
 }
