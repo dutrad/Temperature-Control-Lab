@@ -14,7 +14,7 @@ const int pinLed = 9;
 const float analogTomV = 3300.0/1024.0; // Reference of 3.3V divided by 10 bit read (2^10)
 
 const String firmVersion = "1.2";   //Firmware version
-const int baudRate = 9600;          //Serial baud rate
+const int baudRate = 115200;          //Serial baud rate
 const char separator = ' ';         //Command separator
 const char endOfCmd = '\n';         //Command terminator
 const int n = 10;                   //Samples for tempeterature reading
@@ -31,6 +31,21 @@ void setup() {
   
   Serial.begin(baudRate);
   while(!Serial)  {;}
+}
+
+//void loop() {
+//  readCmd();
+//  parseCmd();
+//  execCmd();
+//  Serial.flush();
+//}
+
+void loop() {
+  for(int d = 0; d < 360; d++){
+    float resultado = 2.0*sin(DEG_TO_RAD * d);
+    Serial.println(resultado, 6);
+    delayMicroseconds(500); // Sampling rate is 1/T -> 2000Hz
+  }
 }
 
 void readCmd(){
@@ -108,11 +123,4 @@ void checkValue(){
 
   iWrite = int(value*2.55);
   iWrite = min(iWrite, 255);
-}
-
-void loop() {
-  readCmd();
-  parseCmd();
-  execCmd();
-  Serial.flush();
 }
