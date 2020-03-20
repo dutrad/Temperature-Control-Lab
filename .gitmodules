@@ -1,0 +1,3 @@
+[submodule "TempFirmware"]
+	path = TempFirmware
+	url = https://github.com/dutrad/TempFirmware.git
